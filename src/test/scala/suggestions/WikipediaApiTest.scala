@@ -65,6 +65,12 @@ class WikipediaApiTest extends FunSuite {
     assert(observed == Seq(1, 2, 3))
   }
 
+  test("WikipediaApi.timedOut") {
+    val clock = Observable.interval(0.1 second)
+    val timedOut = clock.timedOut(1L)
+    assert(timedOut.toBlockingObservable.toList.length == 10)
+  }
+
   test("WikipediaApi should correctly use concatRecovered") {
     val requests = Observable(1, 2, 3)
     val remoteComputation = (n: Int) => Observable(0 to n)

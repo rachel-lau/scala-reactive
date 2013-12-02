@@ -66,7 +66,10 @@ trait WikipediaApi {
      *
      * Note: uses the existing combinators on observables.
      */
-    def timedOut(totalSec: Long): Observable[T] = ???
+    def timedOut(totalSec: Long): Observable[T] = {
+      val that = Observable.interval(totalSec second)
+      obs.takeUntil(that)
+    }
 
 
     /** Given a stream of events `obs` and a method `requestMethod` to map a request `T` into

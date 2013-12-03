@@ -65,6 +65,13 @@ class WikipediaApiTest extends FunSuite {
     assert(observed == Seq(1, 2, 3))
   }
 
+  test("WikipediaApi.recovered with exception") {
+    val requests = Observable(3, 2, 1)
+    val comp = requests.map(i => i / (i - 1))
+    val theList = comp.recovered.map(_.isFailure).toBlockingObservable.toList
+    assert(theList === List(false, false, true))
+  }
+
   test("WikipediaApi.timedOut") {
     val clock = Observable.interval(0.1 second)
     val timedOut = clock.timedOut(1L)

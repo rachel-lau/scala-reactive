@@ -9,6 +9,7 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{ Try, Success, Failure }
 import rx.subscriptions.CompositeSubscription
+import rx.lang.scala.Notification.OnCompleted
 import rx.lang.scala.Notification.OnError
 import rx.lang.scala.Notification.OnNext
 import rx.lang.scala.Observable
@@ -52,7 +53,11 @@ trait WikipediaApi {
      */
     def recovered: Observable[Try[T]] = {
       val notifications = obs.materialize
-      notifications map { nos => nos match {
+      notifications filter { n => n match {
+            case OnNext(n) => true
+            case OnError(t) => true
+            case _ => false // filter out the OnCompleted
+          }} map { nos => nos match {
           case OnNext(n) => Success(n)
           case OnError(t) => Failure(t)
         }
@@ -97,7 +102,11 @@ trait WikipediaApi {
      *
      * Observable(Success(1), Succeess(1), Succeess(1), Succeess(2), Succeess(2), Succeess(2), Succeess(3), Succeess(3), Succeess(3))
      */
-    def concatRecovered[S](requestMethod: T => Observable[S]): Observable[Try[S]] = ???
+    def concatRecovered[S](requestMethod: T => Observable[S]): Observable[Try[S]] = {
+      val requests = obs.map(t => requestMethod(t))
+      val recovered = requests.map(s => {s.recovered})
+      recovered.concat
+    }
 
   }
 
